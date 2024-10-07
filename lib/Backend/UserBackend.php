@@ -44,7 +44,7 @@ class UserBackend extends ABackend implements
 		private CappedMemoryCache $cache,
 		private IConfig $config,
 	) {
-		$this->dsn = $this->config->getSystemValue('wordpress_dsn');
+		$this->dsn = (string) $this->config->getSystemValue('wordpress_dsn', '');
 	}
 
 	public function getBackendName()
