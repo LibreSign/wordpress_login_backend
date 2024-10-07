@@ -1,0 +1,15 @@
+{
+	"name": "libresign/wordpress-login",
+	"description": "Integrate WordPress accounts with Nextcloud",
+	"type": "project",
+	"license": "AGPL-3.0-or-later",
+	"homepage": "https://github.com/libresign/wordpress-login",
+	"support": {
+		"issues": "https://github.com/libresign/wordpress-login/issues"
+	},
+	"autoload": {
+		"psr-4": {
+			"OCA\\WordPressLogin\\": "lib/"
+		}
+	}
+}
