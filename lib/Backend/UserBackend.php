@@ -149,14 +149,18 @@ class UserBackend extends ABackend implements
 				SELECT u.user_pass AS password,
 				       u.user_login AS uid,
 				       u.display_name AS displayname,
-				       CASE WHEN o.status = 'wc-active' AND o.type = 'shop_subscription' THEN 1
-				            ELSE 0
-				            END AS enabled
-				  FROM wp_wc_orders o
-				  JOIN wp_users u ON o.customer_id = u.ID
-				 WHERE o.status IN ('wc-active')
-				   AND o.type = 'shop_subscription'
-				   AND (u.user_login = :username OR u.user_email = :username)
+				       CASE
+				           WHEN EXISTS (
+				               SELECT 1
+				               FROM wp_wc_orders o
+				               WHERE o.customer_id = u.ID
+				                 AND o.status = 'wc-active'
+				                 AND o.type = 'shop_subscription'
+				           ) THEN 1
+				           ELSE 0
+				       END AS enabled
+				  FROM wp_users u
+				 WHERE (u.user_login = :username OR u.user_email = :username)
 				SQL
 			);
 			$statement->execute(['username' => $uid]);
