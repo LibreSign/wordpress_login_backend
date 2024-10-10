@@ -244,7 +244,8 @@ class UserBackend extends ABackend implements
 		$search = '%'. $search . '%';
 		$statement->bindParam(':search', $search);
 		$statement->execute();
-		return $statement->fetchColumn();
+		$result = $statement->fetchAll(PDO::FETCH_ASSOC);
+		return array_column($result, 'uid');
 	}
 
 	public function setUserEnabled(string $uid, bool $enabled, callable $queryDatabaseValue, callable $setDatabaseValue): bool
