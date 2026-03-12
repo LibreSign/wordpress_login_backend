@@ -2,10 +2,23 @@
 
 namespace OCA\WordPressLoginBackend\Helper;
 
-class HashPassword {
-	var $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-	var $iteration_count_log2 = 8;
-	var $portable_hashes = true;
+	class HashPassword {
+		var $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+		var $iteration_count_log2 = 8;
+		var $portable_hashes = true;
+
+		private function hashHmacSha384(string $password, bool $trim = false): string
+		{
+			if ($trim) {
+				$password = trim($password);
+			}
+			return base64_encode(hash_hmac('sha384', $password, 'wp-sha384', true));
+		}
+
+		private function isPrefixedWordPressHash(string $hash): bool
+		{
+			return str_starts_with($hash, '$wp');
+		}
 
 	function get_random_bytes($count)
 	{
@@ -141,15 +154,19 @@ class HashPassword {
 		return $output;
 	}
 
-	function CheckPassword($password, $stored_hash)
-	{
-		if ( strlen( $password ) > 4096 ) {
-			return false;
-		}
+		function CheckPassword($password, $stored_hash)
+		{
+			if ( strlen( $password ) > 4096 ) {
+				return false;
+			}
 
-		$hash = $this->crypt_private($password, $stored_hash);
-		if ($hash[0] === '*')
-			$hash = crypt($password, $stored_hash);
+			if ($this->isPrefixedWordPressHash($stored_hash)) {
+				return password_verify($this->hashHmacSha384($password), substr($stored_hash, 3));
+			}
+
+			$hash = $this->crypt_private($password, $stored_hash);
+			if ($hash[0] === '*')
+				$hash = crypt($password, $stored_hash);
 
 		# This is not constant-time.  In order to keep the code simple,
 		# for timing safety we currently rely on the salts being
@@ -163,12 +180,17 @@ class HashPassword {
 		return $this->CheckPassword($password, $hash);
 	}
 
-	public function hashPassword(string $password): string {
-		if ( strlen( $password ) > 4096 ) {
-			return '*';
-		}
+		public function hashPassword(string $password): string {
+			if ( strlen( $password ) > 4096 ) {
+				return '*';
+			}
 
-		$random = '';
+			$hash = password_hash($this->hashHmacSha384($password, true), PASSWORD_BCRYPT);
+			if ($hash !== false) {
+				return '$wp' . $hash;
+			}
+
+			$random = '';
 
 		if (CRYPT_BLOWFISH === 1 && !$this->portable_hashes) {
 			$random = $this->get_random_bytes(16);
