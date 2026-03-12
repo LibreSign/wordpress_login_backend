@@ -21,6 +21,6 @@ Integrate WordPress accounts with Nextcloud]]></description>
     <bugs>https://github.com/libresign/wordpress_login_backend/issues</bugs>
     <repository type="git">https://github.com/libresign/wordpress_login_backend</repository>
     <dependencies>
-        <nextcloud min-version="28" max-version="31"/>
+        <nextcloud min-version="28" max-version="33"/>
     </dependencies>
 </info>

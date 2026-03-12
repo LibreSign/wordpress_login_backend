@@ -194,7 +194,7 @@ class UserBackend extends ABackend implements
 					'uid_lower', $qb->createNamedParameter(mb_strtolower($uid))
 				)
 			);
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$row = $result->fetch();
 		$result->closeCursor();
 		return $row;

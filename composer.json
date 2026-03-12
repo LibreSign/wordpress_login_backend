@@ -9,7 +9,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"OCA\\WordPressLogin\\": "lib/"
+			"OCA\\WordPressLoginBackend\\": "lib/"
 		}
 	}
 }
