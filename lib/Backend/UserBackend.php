@@ -39,10 +39,10 @@ class UserBackend extends ABackend implements
 	ICheckPasswordBackend {
 	private string $dsn;
 	private ?PDO $pdo = null;
-	private ?IDBConnection $dbConn = null;
 	public function __construct(
 		private CappedMemoryCache $cache,
 		private IConfig $config,
+		private IDBConnection $dbConn,
 	) {
 		$this->dsn = (string) $this->config->getSystemValue('wordpress_dsn', '');
 	}
@@ -81,15 +81,6 @@ class UserBackend extends ABackend implements
 
 	public function hasUserListings() {
 		return true;
-	}
-
-	/**
-	 * FIXME: This function should not be required!
-	 */
-	private function fixDI() {
-		if ($this->dbConn === null) {
-			$this->dbConn = \OC::$server->getDatabaseConnection();
-		}
 	}
 
 	public function userExists($uid) {
@@ -183,20 +174,22 @@ class UserBackend extends ABackend implements
 		return $this->cache[$uid];
 	}
 
-	private function loadUserFromNextcloudDatabase($uid) {
-		$this->fixDI();
-
+	private function loadUserFromNextcloudDatabase(string $uid): array|false {
 		$qb = $this->dbConn->getQueryBuilder();
 		$qb->select('uid', 'displayname', 'password')
 			->from('users')
 			->where(
 				$qb->expr()->eq(
-					'uid_lower', $qb->createNamedParameter(mb_strtolower($uid))
+					'uid_lower',
+					$qb->createNamedParameter(mb_strtolower($uid))
 				)
-			);
+			)
+			->setMaxResults(1);
+
 		$result = $qb->executeQuery();
 		$row = $result->fetch();
 		$result->closeCursor();
+
 		return $row;
 	}
 
