@@ -1,28 +1,12 @@
 <?php
 /**
- * @copyright Copyright (c) 2024 Vitor Mattos <vitor@php.rio>
- *
- * @author Vitor Mattos <vitor@php.rio>
- *
- * @license GNU AGPL version 3 or any later version
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * SPDX-FileCopyrightText: 2024 LibreCode coop and contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
 
 namespace OCA\WordPressLoginBackend\Backend;
 
+use OCA\WordPressLoginBackend\Config\QueryConfig;
 use OCA\WordPressLoginBackend\Helper\HashPassword;
 use OCP\Cache\CappedMemoryCache;
 use OCP\IConfig;
@@ -39,12 +23,14 @@ class UserBackend extends ABackend implements
 	ICheckPasswordBackend {
 	private string $dsn;
 	private ?PDO $pdo = null;
+	private QueryConfig $queryConfig;
 	public function __construct(
 		private CappedMemoryCache $cache,
 		private IConfig $config,
 		private IDBConnection $dbConn,
 	) {
 		$this->dsn = (string) $this->config->getSystemValue('wordpress_dsn', '');
+		$this->queryConfig = new QueryConfig($this->config);
 	}
 
 	public function getBackendName()
@@ -136,24 +122,7 @@ class UserBackend extends ABackend implements
 				$this->cache[$uid] = false;
 				return false;
 			}
-			$statement = $db->prepare(<<<SQL
-				SELECT u.user_pass AS password,
-				       u.user_login AS uid,
-				       u.display_name AS displayname,
-				       CASE
-				           WHEN EXISTS (
-				               SELECT 1
-				               FROM wp_wc_orders o
-				               WHERE o.customer_id = u.ID
-				                 AND o.status = 'wc-active'
-				                 AND o.type = 'shop_subscription'
-				           ) THEN 1
-				           ELSE 0
-				       END AS enabled
-				  FROM wp_users u
-				 WHERE (u.user_login = :username OR u.user_email = :username)
-				SQL
-			);
+			$statement = $db->prepare($this->queryConfig->getWordPressUserQuery());
 			$statement->execute(['username' => $uid]);
 			$row = $statement->fetch(PDO::FETCH_ASSOC);
 
@@ -216,14 +185,7 @@ class UserBackend extends ABackend implements
 		if (!$db) {
 			return [];
 		}
-		$sql = <<<SQL
-			SELECT u.user_login AS uid
-			  FROM wp_wc_orders o
-			  JOIN wp_users u ON o.customer_id = u.ID
-			 WHERE (o.status NOT IN ('wc-active') OR o.type <> 'shop_subscription')
-			   AND (u.user_login LIKE :search) OR (u.user_email LIKE :search)
-			GROUP BY u.user_login
-			SQL;
+		$sql = $this->queryConfig->getDisabledUsersQuery();
 
 		$limit = $this->fixLimit($limit);
 		if (!is_null($limit) && $limit > 0) {

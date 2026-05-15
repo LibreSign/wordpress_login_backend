@@ -8,11 +8,11 @@ declare(strict_types=1);
 
 namespace OCA\WordPressLoginBackend\Listener;
 
+use OCA\WordPressLoginBackend\Config\QueryConfig;
 use OCA\WordPressLoginBackend\Helper\HashPassword;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IConfig;
-use OCP\IDBConnection;
 use OCP\User\Events\BeforePasswordUpdatedEvent;
 use PDO;
 
@@ -22,23 +22,28 @@ use PDO;
 class BeforePasswordUpdatedListener implements IEventListener {
 	private string $dsn;
 	private ?PDO $pdo = null;
+	private QueryConfig $queryConfig;
 	public function __construct(
 		private IConfig $config,
 	) {
 		$this->dsn = (string) $this->config->getSystemValue('wordpress_dsn', '');
+		$this->queryConfig = new QueryConfig($this->config);
 	}
 
 	public function handle(Event $event): void {
 		if (!$event instanceof BeforePasswordUpdatedEvent) {
 			return;
 		}
+		$db = $this->getDatabase();
+		if (!$db) {
+			return;
+		}
 		$hashPassword = new HashPassword();
 		$hash = $hashPassword->hashPassword($event->getPassword());
-		$statement = $this->getDatabase()->prepare(
-			"UPDATE wp_users SET user_pass = :hash WHERE user_login = :username"
-		);
-		$statement->bindParam(':username', $event->getUser()->getUID());
-		$statement->bindParam(':hash', $hash);
+		$username = $event->getUser()->getUID();
+		$statement = $db->prepare($this->queryConfig->setWordPressPasswordQuery());
+		$statement->bindValue(':username', $username);
+		$statement->bindValue(':hash', $hash);
 		$statement->execute();
 	}
 
