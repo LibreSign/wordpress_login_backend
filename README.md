@@ -15,7 +15,7 @@ Autenticate at Nextcloud using username and password of WordPress.
 occ config:system:set wordpress_dsn --value "mysql:host=myserverhostname;port=3306;dbname=woocommerce;user=root;password=root"
 ```
 
-Replace the values by your databae settings.
+Replace the values by your database settings.
 
 ### Custom SQL queries (optional)
 
