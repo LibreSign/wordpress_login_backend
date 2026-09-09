@@ -68,26 +68,6 @@
             "time": "2025-08-01T08:46:24+00:00"
         },
         {
-            "name": "nextcloud/ocp",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/nextcloud/server.git",
-                "reference": "master"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/nextcloud/server/zipball/master",
-                "reference": "master"
-            },
-            "type": "library",
-            "license": [
-                "AGPL-3.0-only"
-            ],
-            "description": "Nextcloud OCP public API stub package",
-            "time": "2025-01-01T00:00:00+00:00"
-        },
-        {
             "name": "nikic/php-parser",
             "version": "v5.7.0",
             "source": {

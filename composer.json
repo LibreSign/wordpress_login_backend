@@ -8,7 +8,6 @@
 		"issues": "https://github.com/libresign/wordpress-login/issues"
 	},
 	"require-dev": {
-		"nextcloud/ocp": "dev-master",
 		"phpunit/phpunit": "^10.5"
 	},
 	"autoload": {
@@ -18,8 +17,7 @@
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"OCA\\WordPressLoginBackend\\Tests\\": "tests/",
-			"OCP\\": "vendor/nextcloud/ocp/OCP"
+			"OCA\\WordPressLoginBackend\\Tests\\": "tests/"
 		}
 	},
 	"scripts": {
