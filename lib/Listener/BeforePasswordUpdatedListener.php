@@ -53,8 +53,12 @@ class BeforePasswordUpdatedListener implements IEventListener {
 	private function getWordPressHash(PDO $db, string $username): string {
 		$statement = $db->prepare($this->queryConfig->getWordPressUserQuery());
 		$statement->execute(['username' => $username]);
-		$row = $statement->fetch(PDO::FETCH_ASSOC);
-		return $row === false ? '' : (string)$row['password'];
+		foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+			if ((string)$row['uid'] === $username) {
+				return (string)$row['password'];
+			}
+		}
+		return '';
 	}
 
 	private function getDatabase(): ?PDO {

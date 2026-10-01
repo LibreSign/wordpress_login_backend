@@ -48,6 +48,15 @@ class BeforePasswordUpdatedListenerTest extends TestCase {
         $this->assertSame($hash, $this->wordPressHashOf('ana'));
     }
 
+    public function testWritesTheNewPasswordWhenAnotherUserHasTheLoginAsEmail(): void {
+        $this->createWordPressUser('bruno', (new HashPassword())->hashPassword('new password'), 'ana@example.org');
+        $this->createWordPressUser('ana@example.org', (new HashPassword())->hashPassword('old password'), 'ana@example.net');
+
+        $this->changePassword('ana@example.org', 'new password');
+
+        $this->assertTrue((new HashPassword())->validate('new password', $this->wordPressHashOf('ana@example.org')));
+    }
+
     public function testIgnoresAUserMissingFromWordPress(): void {
         $this->createWordPressUser('ana', 'hash of ana');
 
@@ -56,9 +65,9 @@ class BeforePasswordUpdatedListenerTest extends TestCase {
         $this->assertSame('hash of ana', $this->wordPressHashOf('ana'));
     }
 
-    private function createWordPressUser(string $login, string $hash): void {
+    private function createWordPressUser(string $login, string $hash, ?string $email = null): void {
         $statement = $this->database->prepare('INSERT INTO wp_users (user_login, user_email, user_pass, display_name) VALUES (:login, :email, :hash, :login)');
-        $statement->execute(['login' => $login, 'email' => $login . '@example.org', 'hash' => $hash]);
+        $statement->execute(['login' => $login, 'email' => $email ?? $login . '@example.org', 'hash' => $hash]);
     }
 
     private function wordPressHashOf(string $login): string {
