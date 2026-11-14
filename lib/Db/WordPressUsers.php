@@ -37,6 +37,17 @@ class WordPressUsers {
 		return null;
 	}
 
+	public function updatePassword(string $login, string $hash): void {
+		$database = $this->getDatabase();
+		if (!$database) {
+			return;
+		}
+		$statement = $database->prepare($this->queryConfig->setWordPressPasswordQuery());
+		$statement->bindValue(':username', $login);
+		$statement->bindValue(':hash', $hash);
+		$statement->execute();
+	}
+
 	private function getDatabase(): ?PDO {
 		$dsn = (string)$this->config->getSystemValue('wordpress_dsn', '');
 		if ($dsn === '') {

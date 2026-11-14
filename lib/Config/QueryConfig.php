@@ -31,7 +31,8 @@ class QueryConfig {
                    ELSE 0
                END AS enabled
           FROM wp_users u
-         WHERE (u.user_login = :username OR u.user_email = :username)
+         WHERE u.user_login = :username
+           AND HEX(u.user_login) = HEX(:username)
         SQL;
 
     public const DEFAULT_GET_DISABLED_USERS = <<<'SQL'
@@ -39,12 +40,16 @@ class QueryConfig {
           FROM wp_wc_orders o
           JOIN wp_users u ON o.customer_id = u.ID
          WHERE (o.status NOT IN ('wc-active') OR o.type <> 'shop_subscription')
-           AND (u.user_login LIKE :search OR u.user_email LIKE :search)
+           AND u.user_login LIKE :search
         GROUP BY u.user_login
         SQL;
 
-    public const DEFAULT_SET_WORDPRESS_PASSWORD =
-        'UPDATE wp_users SET user_pass = :hash WHERE user_login = :username';
+    public const DEFAULT_SET_WORDPRESS_PASSWORD = <<<'SQL'
+        UPDATE wp_users
+           SET user_pass = :hash
+         WHERE user_login = :username
+           AND HEX(user_login) = HEX(:username)
+        SQL;
 
     public function __construct(
         private IConfig $config,
