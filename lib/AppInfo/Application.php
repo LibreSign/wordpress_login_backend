@@ -15,6 +15,7 @@ use OCP\User\Events\BeforePasswordUpdatedEvent;
 
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'wordpress_login_backend';
+	public const LINKED_LOGIN_KEY = 'wordpress_login';
 
 	public function __construct(array $urlParams = array()) {
 		parent::__construct(Application::APP_ID, $urlParams);
