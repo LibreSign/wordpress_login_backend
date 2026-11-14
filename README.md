@@ -40,6 +40,24 @@ The backend expects these named parameters:
 - `:search` for disabled-user listing
 - `:hash` for password updates
 
+### Linking existing accounts
+
+An account is linked to WordPress by the user preference `wordpress_login` of
+the app `wordpress_login_backend`, holding the account uid. Admin Group Manager
+records it when it creates the account that owns a group.
+
+To link the accounts created before that, run:
+
+```bash
+occ wordpress-login-backend:link-users --dry-run
+occ wordpress-login-backend:link-users
+```
+
+The command links each account that is sub-admin of the group with the same id
+as its uid and has a WordPress user with exactly that login. Members of the
+groups are never linked and are listed as skipped. With `--dry-run` it only
+lists the accounts.
+
 ## Support, customization and enterprise
 
 If you need help using this app, or if you want custom development, priority

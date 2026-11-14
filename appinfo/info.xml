@@ -23,4 +23,7 @@ Integrate WordPress accounts with Nextcloud]]></description>
     <dependencies>
         <nextcloud min-version="32" max-version="35"/>
     </dependencies>
+    <commands>
+        <command>OCA\WordPressLoginBackend\Command\LinkUsers</command>
+    </commands>
 </info>
