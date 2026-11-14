@@ -6,11 +6,13 @@
 
 namespace OCA\WordPressLoginBackend\AppInfo;
 
+use OCA\WordPressLoginBackend\Listener\BeforeUserCreatedListener;
 use OCA\WordPressLoginBackend\Listener\PasswordUpdatedListener;
 use \OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\User\Events\BeforeUserCreatedEvent;
 use OCP\User\Events\PasswordUpdatedEvent;
 
 class Application extends App implements IBootstrap {
@@ -29,5 +31,6 @@ class Application extends App implements IBootstrap {
 
 	public function register(IRegistrationContext $context): void {
 		$context->registerEventListener(PasswordUpdatedEvent::class, PasswordUpdatedListener::class);
+		$context->registerEventListener(BeforeUserCreatedEvent::class, BeforeUserCreatedListener::class);
 	}
 }
