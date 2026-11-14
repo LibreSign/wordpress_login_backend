@@ -34,6 +34,9 @@ password, and only their password changes are written back to WordPress. The
 WordPress user is the one whose `user_login` is exactly the account uid. See
 [Linking existing accounts](#linking-existing-accounts).
 
+While logged in, only administrators and delegated administrators can create
+an account whose uid is a WordPress login.
+
 ### Custom SQL queries (optional)
 
 You can override default SQL queries using the `wordpress_queries` system key,

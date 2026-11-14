@@ -42,6 +42,16 @@ namespace OCP {
     if (!interface_exists(IGroupManager::class)) {
         interface IGroupManager {
             public function search(string $search, ?int $limit = null, ?int $offset = 0);
+
+            public function isAdmin($userId);
+
+            public function isDelegatedAdmin(string $userId): bool;
+        }
+    }
+
+    if (!interface_exists(IUserSession::class)) {
+        interface IUserSession {
+            public function getUser();
         }
     }
 
@@ -197,6 +207,20 @@ namespace OCP\EventDispatcher {
 namespace OCP\User\Events {
     use OCP\EventDispatcher\Event;
     use OCP\IUser;
+
+    if (!class_exists(BeforeUserCreatedEvent::class)) {
+        class BeforeUserCreatedEvent extends Event {
+            public function __construct(
+                private string $uid,
+                private string $password,
+            ) {
+            }
+
+            public function getUid(): string {
+                return $this->uid;
+            }
+        }
+    }
 
     if (!class_exists(PasswordUpdatedEvent::class)) {
         class PasswordUpdatedEvent extends Event {
