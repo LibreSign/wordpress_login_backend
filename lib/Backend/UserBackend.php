@@ -6,7 +6,9 @@
 
 namespace OCA\WordPressLoginBackend\Backend;
 
+use OCA\WordPressLoginBackend\AppInfo\Application;
 use OCA\WordPressLoginBackend\Config\QueryConfig;
+use OCA\WordPressLoginBackend\Db\WordPressUsers;
 use OCA\WordPressLoginBackend\Helper\HashPassword;
 use OCP\Cache\CappedMemoryCache;
 use OCP\IConfig;
@@ -28,6 +30,7 @@ class UserBackend extends ABackend implements
 		private CappedMemoryCache $cache,
 		private IConfig $config,
 		private IDBConnection $dbConn,
+		private WordPressUsers $wordPressUsers,
 	) {
 		$this->dsn = (string) $this->config->getSystemValue('wordpress_dsn', '');
 		$this->queryConfig = new QueryConfig($this->config);
@@ -82,7 +85,7 @@ class UserBackend extends ABackend implements
 		$hashPassword = new HashPassword();
 		$isOk = $hashPassword->checkPassword($password, $user['password']);
 		if ($isOk) {
-			return $loginName;
+			return $user['uid'];
 		}
 		return false;
 	}
@@ -117,27 +120,19 @@ class UserBackend extends ABackend implements
 				return false;
 			}
 
-			$db = $this->getDatabase();
-			if (!$db) {
+			$nextcloudUid = (string)$nextcloudUser['uid'];
+			$linkedLogin = $this->config->getUserValue($nextcloudUid, Application::APP_ID, Application::LINKED_LOGIN_KEY);
+			$row = $linkedLogin === $nextcloudUid ? $this->wordPressUsers->findByLogin($nextcloudUid) : null;
+			if ($row === null) {
 				$this->cache[$uid] = false;
 				return false;
 			}
-			$statement = $db->prepare($this->queryConfig->getWordPressUserQuery());
-			$statement->execute(['username' => $uid]);
-			$row = $statement->fetch(PDO::FETCH_ASSOC);
-
-			// "uid" is primary key, so there can only be a single result
-			if ($row !== false) {
-				$this->cache[$uid] = [
-					'uid' => (string)$row['uid'],
-					'displayname' => (string)$row['displayname'],
-					'password' => (string)$row['password'],
-					'enabled' => (bool)$row['enabled'],
-				];
-			} else {
-				$this->cache[$uid] = false;
-				return false;
-			}
+			$this->cache[$uid] = [
+				'uid' => (string)$row['uid'],
+				'displayname' => (string)$row['displayname'],
+				'password' => (string)$row['password'],
+				'enabled' => (bool)$row['enabled'],
+			];
 		}
 
 		return $this->cache[$uid];
