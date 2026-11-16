@@ -17,6 +17,26 @@ occ config:system:set wordpress_dsn --value "mysql:host=myserverhostname;port=33
 
 Replace the values by your database settings.
 
+The database user only needs `SELECT` on the tables read by the queries
+(`wp_users` and `wp_wc_orders` with the default ones) and `UPDATE` on
+`wp_users.user_pass`:
+
+```sql
+GRANT SELECT ON woocommerce.wp_users TO 'nextcloud'@'%';
+GRANT SELECT ON woocommerce.wp_wc_orders TO 'nextcloud'@'%';
+GRANT UPDATE (user_pass) ON woocommerce.wp_users TO 'nextcloud'@'%';
+```
+
+### Linked accounts
+
+Only accounts linked to a WordPress user can log in with the WordPress
+password, and only their password changes are written back to WordPress. The
+WordPress user is the one whose `user_login` is exactly the account uid. See
+[Linking existing accounts](#linking-existing-accounts).
+
+While logged in, only administrators and delegated administrators can create
+an account whose uid is a WordPress login.
+
 ### Custom SQL queries (optional)
 
 You can override default SQL queries using the `wordpress_queries` system key,
@@ -31,7 +51,7 @@ Supported query keys:
 Example:
 
 ```bash
-occ config:system:set wordpress_queries --type json --value '{"get_wordpress_user":"SELECT user_pass AS password, user_login AS uid, display_name AS displayname, 1 AS enabled FROM wp_users WHERE user_login = :username OR user_email = :username","get_disabled_users":"SELECT user_login AS uid FROM wp_users WHERE user_login LIKE :search","set_wordpress_password":"UPDATE wp_users SET user_pass = :hash WHERE user_login = :username"}'
+occ config:system:set wordpress_queries --type json --value '{"get_wordpress_user":"SELECT user_pass AS password, user_login AS uid, display_name AS displayname, 1 AS enabled FROM wp_users WHERE user_login = :username","get_disabled_users":"SELECT user_login AS uid FROM wp_users WHERE user_login LIKE :search","set_wordpress_password":"UPDATE wp_users SET user_pass = :hash WHERE user_login = :username"}'
 ```
 
 The backend expects these named parameters:
@@ -45,6 +65,12 @@ The backend expects these named parameters:
 An account is linked to WordPress by the user preference `wordpress_login` of
 the app `wordpress_login_backend`, holding the account uid. Admin Group Manager
 records it when it creates the account that owns a group.
+
+When upgrading from a version that did not require the link, deploy in this
+order, otherwise the existing customers cannot log in:
+
+1. a version of Admin Group Manager that records the link;
+2. this app, then run the command below to link the existing accounts.
 
 To link the accounts created before that, run:
 
